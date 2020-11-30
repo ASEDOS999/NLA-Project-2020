@@ -1,5 +1,5 @@
 import numpy as np
-from numpy.linalg import norm, matrix_rank
+from numpy.linalg import norm, matrix_rank, eig, inv
 
 
 ## The gradient of l_p-regression at c
@@ -30,9 +30,19 @@ def lowner(A, p):
             c = c - 1/(d + 1) * b
             F = (d ** 2)/(d ** 2 - 1) * (F - 2/(d + 1) * np.matmul(b, np.transpose(b)))
         ## 13 - 16
-
-
-
+        containd = True
+        w, v = eig(inv(F))
+        for ind, val in enumerate(w):
+            v[ind] /= sqrt(val)
+        for vec in v:
+            if norm(np.matmul(A, vec/d + c), p) >= 1:
+                containd = False
+        if containd:
+            break
+            
+        ## 17
+        
+        
         ##18..26
         grad = grad_compute(A, v, p, d)
         H = 1/norm(grad, np.inf) * grad
