@@ -71,4 +71,4 @@ def l_p_low_rank(A, k, p):
     U = np.matmul(A, inv(np.matmul(D, np.transpose(V))))
     set_of_sigma = np.diag(D)
     D_k = np.diag(np.array(list(set_of_sigma[0 : k]) + [0] * (d - k)) )
-    return A, D_k, V, set_of_sigma
+    return U, D_k, V, set_of_sigma
