@@ -1,6 +1,6 @@
 import numpy as np
-from numpy.linalg import norm, matrix_rank, eig, inv
-
+from numpy.linalg import norm, matrix_rank, eig, inv, cholesky, svd
+from numpy import sqrt
 
 ## The gradient of l_p-regression at c
 def grad_compute(A, c, p, d):
@@ -15,12 +15,12 @@ def grad_compute(A, c, p, d):
 
 
 def lowner(A, p):
+    d = A.shape[1]
     #E := A ball centered around the origin which contains L
     r = 1/norm(A, 2)   #3 r \leq 1/max(\sigma)
     F = r * np.identity(d) 
     c = np.zeros(shape=(d, 1)) 
     n = A.shape[0]
-    d = A.shape[1]
     while True: 
         ## 7-12
         while norm(np.matmul(A, c), p) >= 1: ## c not in L
@@ -41,8 +41,14 @@ def lowner(A, p):
             break
             
         ## 17
-        
-        
+        max_v = vec[0]
+        _max = norm(np.matmul(A, v), p)
+        for vec in v:
+            temp = norm(np.matmul(A, vec), p)
+            if temp >= _max:
+                max_v = vec
+                _max = temp
+        v = max_v
         ##18..26
         grad = grad_compute(A, v, p, d)
         H = 1/norm(grad, np.inf) * grad
@@ -54,6 +60,15 @@ def lowner(A, p):
         F = zeta * sigma * (F - tau * np.matmul(b, np.tranpose(b)))
         c = c - z*b
     ##27..28
-    G = np.linalg.cholesky(np.linalg.inv(F))
-    S, V, D = linalg.svd(G)
+    G = cholesky(inv(F))
+    S, D, V = svd(G)
+    D = np.diag(D)
     return D, V
+
+def l_p_low_rank(A, k, p):
+    d = A.shape[1]
+    D, V = lowner(A, p)
+    U = np.matmul(A, inv(np.matmul(D, np.transpose(V))))
+    set_of_sigma = np.diag(D)
+    D_k = np.diag(np.array(list(set_of_sigma[0 : k]) + [0] * (d - k)) )
+    return A, D_k, V, set_of_sigma
