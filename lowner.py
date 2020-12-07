@@ -9,7 +9,7 @@ def grad_compute(A, c, p, d):
     for i in range(d): # то что в элементах градиента в знаменателях
         factors[i] = np.abs(np.dot(A[i, :], c))
     for j in range(d): # заполняем вектор который в выражении градиента
-        grad[j] = np.sum(A[:, j] / factors[j]) * c[j]
+        grad[j] = np.sum(A[j, :] / factors) * c[j]
     grad *= norm(np.matmul(A, c), p) ** (p-1) * norm(np.matmul(A, c), p-1) ** (p-1)
     return grad
 
@@ -17,7 +17,7 @@ def grad_compute(A, c, p, d):
 def lowner(A, p):
     d = A.shape[1]
     #E := A ball centered around the origin which contains L
-    r = 1/norm(A, 2)   #3 r \leq 1/max(\sigma)
+    r = 1/sqrt(norm(A, 2))   #3 r \leq 1/max(\sigma)
     F = r * np.identity(d) 
     c = np.zeros(shape=(d,)) 
     n = A.shape[0]
@@ -31,11 +31,11 @@ def lowner(A, p):
             F = (d ** 2)/(d ** 2 - 1) * (F - 2/(d + 1) * np.matmul(b, np.transpose(b)))
         ## 13 - 16
         containd = True
-        w, v = eig(inv(F))
+        w, v = eig((np.identity(d) + c).T @ inv(F) @ (np.identity(d) + c))
         for ind, val in enumerate(w):
             v[ind] /= sqrt(val)
         for vec in v:
-            if norm(np.matmul(A, vec/d + c), p) >= 1:
+            if norm(np.matmul(A, vec/np.sqrt(d) - c), p) >= 1:
                 containd = False
         if containd:
             break
