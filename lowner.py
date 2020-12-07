@@ -4,12 +4,12 @@ from numpy import sqrt
 
 ## The gradient of l_p-regression at c
 def grad_compute(A, c, p, d):
-    grad = np.array(shape(d, 1))
-    factors = np.array(shape(d, 1))
-    for i in range(n): # то что в элементах градиента в знаменателях
-        factors[i, :] = np.abs(np.matmul(np.transpose(A[i, :]), c))
+    grad = np.zeros((d,))
+    factors = np.zeros((d,))
+    for i in range(d): # то что в элементах градиента в знаменателях
+        factors[i] = np.abs(np.dot(A[i, :], c))
     for j in range(d): # заполняем вектор который в выражении градиента
-        grad[j, 0] = np.sum(A[:, j] / factors) * c[j, 0]
+        grad[j] = np.sum(A[:, j] / factors[j]) * c[j]
     grad *= norm(np.matmul(A, c), p) ** (p-1) * norm(np.matmul(A, c), p-1) ** (p-1)
     return grad
 
@@ -19,11 +19,11 @@ def lowner(A, p):
     #E := A ball centered around the origin which contains L
     r = 1/norm(A, 2)   #3 r \leq 1/max(\sigma)
     F = r * np.identity(d) 
-    c = np.zeros(shape=(d, 1)) 
+    c = np.zeros(shape=(d,)) 
     n = A.shape[0]
     while True: 
         ## 7-12
-        while norm(np.matmul(A, c), p) >= 1: ## c not in L
+        while norm(np.matmul(A, c), p) > 1: ## c not in L
             grad = grad_compute(A, c, p, d)
             H = 1/norm(grad, np.inf) * grad
             b = 1/sqrt(np.matmul(np.transpose(H), np.matmul(F, H))) * np.matmul(F, H)
@@ -41,7 +41,7 @@ def lowner(A, p):
             break
             
         ## 17
-        max_v = vec[0]
+        max_v = v[0]
         _max = norm(np.matmul(A, v), p)
         for vec in v:
             temp = norm(np.matmul(A, vec), p)
@@ -57,7 +57,7 @@ def lowner(A, p):
         zeta = 1 + 1/2/(d**2)/((d+1) ** 2)
         tau = 2/d/(d+1)
         b = 1/sqrt(np.matmul(np.transpose(H), np.matmul(F, H))) * np.matmul(F, H)
-        F = zeta * sigma * (F - tau * np.matmul(b, np.tranpose(b)))
+        F = zeta * sigma * (F - tau * np.outer(b, b))
         c = c - z*b
     ##27..28
     G = cholesky(inv(F))
