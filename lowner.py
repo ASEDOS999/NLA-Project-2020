@@ -17,7 +17,7 @@ def grad_compute(A, c, p, d, n):
 def lowner(A, p):
     d = A.shape[1]
     #E := A ball centered around the origin which contains L
-    r = 1/norm(A, 2)   #3 r \leq 1/max(\sigma)
+    r = 1/sqrt(norm(A, 2))   #3 r \leq 1/max(\sigma)
     F = r * np.identity(d) 
     c = np.zeros(shape=(d,)) 
     n = A.shape[0]
@@ -26,23 +26,23 @@ def lowner(A, p):
         while norm(np.matmul(A, c), p) > 1: ## c not in L
             grad = grad_compute(A, c, p, d, n)
             H = 1/norm(grad, np.inf) * grad
+            print(np.matmul(np.transpose(H), np.matmul(F, H)))
             b = 1/sqrt(np.matmul(np.transpose(H), np.matmul(F, H))) * np.matmul(F, H)
             c = c - 1/(d + 1) * b
             F = (d ** 2)/(d ** 2 - 1) * (F - 2/(d + 1) * np.matmul(b, np.transpose(b)))
         ## 13 - 16
         containd = True
-        w, v = eig(inv(F))
+        w, v = eig((np.identity(d) + c).T @ inv(F) @ (np.identity(d) + c))
         for ind, val in enumerate(w):
             v[ind] /= sqrt(val)
         for vec in v:
-            if norm(np.matmul(A, vec/d + c), p) >= 1:
+            if norm(np.matmul(A, vec/d - c), p) >= 1:
                 containd = False
         if containd:
             break
-            
         ## 17
         max_v = v[0]
-        _max = norm(np.matmul(A, v), p)
+        _max = norm(np.matmul(A, v[0]), p)
         for vec in v:
             temp = norm(np.matmul(A, vec), p)
             if temp >= _max:
