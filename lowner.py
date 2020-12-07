@@ -3,7 +3,7 @@ from numpy.linalg import norm, matrix_rank, eig, inv, cholesky, svd
 from numpy import sqrt
 
 ## The gradient of l_p-regression at c
-def grad_compute(A, c, p, d):
+def grad_compute(A, c, p, d, n):
     grad = np.zeros((d,))
     factors = np.zeros((n,))
     for i in range(n): # то что в элементах градиента в знаменателях
@@ -24,7 +24,7 @@ def lowner(A, p):
     while True: 
         ## 7-12
         while norm(np.matmul(A, c), p) > 1: ## c not in L
-            grad = grad_compute(A, c, p, d)
+            grad = grad_compute(A, c, p, d, n)
             H = 1/norm(grad, np.inf) * grad
             b = 1/sqrt(np.matmul(np.transpose(H), np.matmul(F, H))) * np.matmul(F, H)
             c = c - 1/(d + 1) * b
@@ -50,7 +50,7 @@ def lowner(A, p):
                 _max = temp
         v = max_v
         ##18..26
-        grad = grad_compute(A, v, p, d)
+        grad = grad_compute(A, v, p, d, n)
         H = 1/norm(grad, np.inf) * grad
         z = 1/(d + 1)/(d + 1)
         sigma = (d**3)*(d+2)/((d+1)**3)/(d-1)
