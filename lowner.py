@@ -5,11 +5,11 @@ from numpy import sqrt
 ## The gradient of l_p-regression at c
 def grad_compute(A, c, p, d):
     grad = np.zeros((d,))
-    factors = np.zeros((d,))
-    for i in range(d): # то что в элементах градиента в знаменателях
+    factors = np.zeros((n,))
+    for i in range(n): # то что в элементах градиента в знаменателях
         factors[i] = np.abs(np.dot(A[i, :], c))
     for j in range(d): # заполняем вектор который в выражении градиента
-        grad[j] = np.sum(A[:, j] / factors[j]) * c[j]
+        grad[j] = np.sum(A[:, j] / factors) * c[j]
     grad *= norm(np.matmul(A, c), p) ** (p-1) * norm(np.matmul(A, c), p-1) ** (p-1)
     return grad
 
