@@ -1,6 +1,12 @@
 import numpy as np
 from numpy.linalg import norm, matrix_rank, eig, inv, cholesky, svd
 from numpy import sqrt
+import sys
+
+if not sys.warnoptions:
+    import os, warnings
+    warnings.simplefilter("error")
+    os.environ["PYTHONWARNINGS"] = "error" 
 
 
 ## The gradient of l_p-regression at c
@@ -8,7 +14,10 @@ def grad_compute(A, c, p, d, n):
     grad = np.zeros((d,))
     factors = np.zeros((n,))
     for i in range(n): # то что в элементах градиента в знаменателях
-        factors[i] = np.abs(np.dot(A[i, :], c))
+        if np.abs(np.dot(A[i, :], c)) != 0:
+            factors[i] = np.abs(np.dot(A[i, :], c))
+        else:
+            factors[i] = 1e-5
     for j in range(d): # заполняем вектор который в выражении градиента
         grad[j] = np.sum(A[:, j] / factors) * c[j]
     #grad *= norm(np.matmul(A, c), p) ** (p-1) * norm(np.matmul(A, c), p-1) ** (p-1) # бесполезно, оно сокращаяется потом
@@ -20,7 +29,7 @@ def lowner(A, p):
     iter_num = 0
     d = A.shape[1]
     #E := A ball centered around the origin which contains L
-    r = 3/(norm(A, -2)) ** (1/p)
+    r = 100 / (norm(A, -2) ** (1/p)) 
     F = r * np.identity(d)
     F_prev = F
     c = np.zeros(shape=(d,)) 
@@ -32,14 +41,16 @@ def lowner(A, p):
         while norm(np.matmul(A, c), p) > 1: ## c not in L
             grad = grad_compute(A, c, p, d, n)
             H = 1/np.max(np.abs(grad)) * grad.astype(np.longdouble)
-            b = 1/sqrt(abs(np.matmul(np.transpose(H), np.matmul(F, H))) + 1e-10) * np.matmul(F, H)
+            const = H.T @ F @ H
+            b = 1/sqrt(const) * np.matmul(F, H)
             c = c - 1/(d + 1) * b
-            F = (d ** 2)/(d ** 2 - 1) * (F - 2/(d + 1) * np.matmul(b, np.transpose(b)))
+            const = H.T @ F @ H
+            F = (d ** 2)/(d ** 2 - 1) * (F - 2/(d + 1) * ((F ) @ (H.reshape((d, 1)) / const) @ (H.reshape((d, 1)).T) @( F)))
         ## 13 - 16
         containd = True
         w, v = eig(inv(F.astype(np.float32)) / d)
-        v = v.astype(np.float64)
-        w = w.astype(np.float64)
+        v = v.real.astype(np.float64)
+        w = w.real.astype(np.float64)
         if not (w > 0).all():
             print("не положительно определена стала на очередной итерации")
             stop = True
@@ -73,14 +84,15 @@ def lowner(A, p):
         v = max_v
         ##18..26
         grad = grad_compute(A, v, p, d, n)
-        H = 1/np.max(np.abs(grad)) * grad.astype(np.longdouble)
+        H = 1/np.max(np.abs(grad)) * grad
         z = 1/((d + 1) * (d + 1))
         sigma = (d*d*d)*(d+2)/(((d+1)**3) * (d-1))
         zeta = 1 + 1/(2 * d * d * (d + 1) * (d + 1))
         tau = 2/(d * (d + 1))
-        b = 1/sqrt(abs(H.T @ F @ H) + 1e-10) * (F @ H)
+        const = H.T @ F @ H
+        b = 1/sqrt(const) * np.matmul(F, H)
         F_prev = F
-        F = zeta * sigma * (F - tau * np.matmul(b, np.transpose(b))) 
+        F = zeta * sigma * (F - tau * (F @ ((H.reshape((d, 1)) / const) @ H.reshape((d, 1)).T) @F)) 
         c = c - z*b
     F = F_prev
     ##27..28
