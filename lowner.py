@@ -20,7 +20,7 @@ def lowner(A, p):
     iter_num = 0
     d = A.shape[1]
     #E := A ball centered around the origin which contains L
-    r = 1/sqrt(norm(A, -2))
+    r = 3/(norm(A, -2)) ** (1/p)
     F = r * np.identity(d)
     F_prev = F
     c = np.zeros(shape=(d,)) 
@@ -52,6 +52,8 @@ def lowner(A, p):
         for vec in v:
             if norm(np.matmul(A, vec), p) > 1:
                 containd = False
+            if norm(np.matmul(A, 2*c - vec), p) > 1:
+                containd = False
         if containd:
             break
         ## 17
@@ -62,6 +64,12 @@ def lowner(A, p):
             if temp >= _max:
                 max_v = vec
                 _max = temp
+                
+            temp = norm(np.matmul(A, 2*c - vec), p)
+            if temp >= _max:
+                max_v = 2*c - vec
+                _max = temp
+                
         v = max_v
         ##18..26
         grad = grad_compute(A, v, p, d, n)
