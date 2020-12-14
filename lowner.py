@@ -43,7 +43,7 @@ def lowner(A, p, max_iter):
             c = c - 1 / (d + 1) * b
             F = (d ** 2) / (d ** 2 - 1) * (F - 2 / (d + 1) * np.outer(b, b.T))
         ## 13 - 16
-        containd = True
+        contained = True
         w, v = eig(inv(F.astype(np.float64)) * d ** 2)
         v = v.real.astype(np.float64)
         w = w.real.astype(np.float64)
@@ -55,16 +55,16 @@ def lowner(A, p, max_iter):
             break
         for ind, val in enumerate(w):
             v[ind] = v[ind] / sqrt(val)
-        #     v[ind] = (v[ind]) + c
-        containd = True
+            # v[ind] = (v[ind]) + c
+        contained = True
         for vec in v:
             if norm(np.matmul(A, vec), p) > 1:
-                containd = False
+                contained = False
                 break
             # if norm(np.matmul(A, 2 * c - vec), p) > 1:
             #     containd = False
             #     break
-        if containd:
+        if contained:
             break
         ## 17
         max_index = np.argmax(abs(w))
@@ -74,22 +74,6 @@ def lowner(A, p, max_iter):
             if norm(np.matmul(A, eigh_v), p) > _max:
                 _max = norm(np.matmul(A, eigh_v), p)
                 max_v = v[i]
-        # for debug
-        # if v[0][1] == 0:
-        #     max_v = v[1]
-        # _max = norm(np.matmul(A, max_v), p)
-
-        # for vec in v:
-        #     temp = norm(np.matmul(A, vec), p)
-        #     if temp >= _max:
-        #         max_v = vec
-        #         _max = temp
-        #
-        #     temp = norm(np.matmul(A, 2 * c - vec), p)
-        #     if temp >= _max:
-        #         max_v = 2 * c - vec
-        #         _max = temp
-
         v = max_v
         ##18..26
         grad = grad_compute(A, v, p)

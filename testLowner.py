@@ -1,15 +1,15 @@
 import unittest
-import numpy as np
-from scipy.spatial import distance_matrix
 
-from lowner import lowner, l_p_low_rank
+import numpy as np
+
+from lowner import l_p_low_rank
 
 
 class TestLowner(unittest.TestCase):
     def test1(self):
         #A = np.asarray([[1, 2, 0], [0, 1, 117], [-7, 0, 1]])
         A = np.random.rand(30, 20)
-        k = 5
+        k = 10
         p = 1
         U, D_k, V, sigmas = l_p_low_rank(A, k, p, 10)
         print(np.linalg.norm(A - U @ D_k @ V))
