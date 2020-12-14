@@ -47,6 +47,7 @@ def lowner(A, p, max_iter):
         w, v = eig(inv(F.astype(np.float64)) * d ** 2)
         v = v.real.astype(np.float64)
         w = w.real.astype(np.float64)
+        v = v.T
         if not (w > 0).all():
             print("не положительно определена стала на очередной итерации")
             stop = True
@@ -59,8 +60,10 @@ def lowner(A, p, max_iter):
         for vec in v:
             if norm(np.matmul(A, vec), p) > 1:
                 containd = False
-            if norm(np.matmul(A, 2 * c - vec), p) > 1:
-                containd = False
+                break
+            # if norm(np.matmul(A, 2 * c - vec), p) > 1:
+            #     containd = False
+            #     break
         if containd:
             break
         ## 17
@@ -103,9 +106,9 @@ def lowner(A, p, max_iter):
         if iter_num >= max_iter:
             print("Max iteration exceeded!")
             break
-    F = F_prev
+    #F = F_prev
     ##27..28
-    G = cholesky(inv(F.astype(np.float32)))
+    G = cholesky(inv(F.astype(np.float64)))
     S, D, V = svd(G)
     D = np.diag(D)
     print("iter", iter_num)
