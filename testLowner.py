@@ -15,17 +15,19 @@ class TestLowner(unittest.TestCase):
         print(np.linalg.norm(A - U @ D_k @ V))
         U, D_k, V, sigmas = l_p_low_rank(A, k, p, 500)
         print(np.linalg.norm(A - U @ D_k @ V))
+        U, D_k, V, sigmas = l_p_low_rank(A, k, 1, 20)
+        print(np.linalg.norm(A - U @ D_k @ V))
         U, D, V = np.linalg.svd(A, full_matrices=False)
         print(np.linalg.norm(A - U[:, :k] @ np.diag(D[:k]) @ V[:k, :]))
 
     def test2(self):
         A = np.asarray([[3.0, 5.0], [0.0, 1.0]])
         k = 2
-        U, D_k, V, sigmas = l_p_low_rank(A, k, 1, 25)
+        U, D_k, V, sigmas = l_p_low_rank(A, k, 1, 250)
         print(np.linalg.norm(A - U @ D_k @ V))
         U, D, V = np.linalg.svd(A, full_matrices=False)
         print(np.linalg.norm(A - U[:, :k] @ np.diag(D[:k]) @ V[:k, :]))
 
 
 if __name__ == '__main__':
-    unittest.amin()
+    TestLowner().test2()

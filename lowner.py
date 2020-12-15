@@ -3,6 +3,7 @@ from numpy.linalg import norm, matrix_rank, eig, inv, cholesky, svd
 from numpy import sqrt
 import sys
 import torch
+import scipy.optimize as scopt
 
 if not sys.warnoptions:
     import os, warnings
@@ -12,13 +13,58 @@ if not sys.warnoptions:
 
 
 ## The gradient of l_p-regression at c
-def grad_compute(A, x, p):
-    A_ = torch.tensor(A, requires_grad=False)
-    x_ = torch.tensor(x.astype(np.float64), requires_grad=True)
-    y_ = torch.matmul(A_, x_)
-    y_ = torch.norm(y_, p)
+def grad_compute_lp(A, x, p):
+    A_ = torch.tensor(A, requires_grad=False).to(torch.device("cpu"))
+    x_ = torch.tensor(x.astype(np.float64), requires_grad=True).to(torch.device("cpu"))
+    y_ = torch.matmul(A_, x_).to(torch.device("cpu"))
+    y_ = torch.norm(y_, p).to(torch.device("cpu"))
     y_.backward()
     return x_.grad.detach().numpy()
+
+def grad_compute(A, c, p):
+    n, d = A.shape
+    grad = np.zeros((d,))
+    factors = np.zeros((n,))
+    for i in range(n): # то что в элементах градиента в знаменателях
+        factors[i] = np.abs(np.dot(A[i, :], c))
+    for j in range(d): # заполняем вектор который в выражении градиента
+        grad[j] = np.sum(A[:, j] / factors) * c[j]
+    #grad *= norm(np.matmul(A, c), p) ** (p-1) * norm(np.matmul(A, c), p-1) ** (p-1) # бесполезно, оно сокращаяется потом
+    return grad
+
+
+def argmax_v(A, F, c, p):
+    opt = lambda x: -np.linalg.norm(A @ x, ord=p)
+    grad_opt = lambda x: grad_compute_lp(A, x, p)
+    d = A.shape[1]
+    F_inv = np.linalg.inv(F.astype(np.float64))
+    constr = lambda x: d**2 * (x-c).T @ F_inv @ (x-c)
+    constr_grad = lambda x: -2 * d**2 * F_inv @ x
+    constraints = scopt.NonlinearConstraint(fun=constr,
+                                            lb=-np.inf,
+                                            ub=1,
+                                            jac=constr_grad)
+    constraints = {"type":"eq", "fun":lambda x: -constr(x)+1, "jac":constr_grad}
+    w, v = eig(inv(F.astype(np.float64)) * d ** 2)
+    v = np.vstack([v.T, -v.T])
+    w = np.hstack([w, w])
+    max_ = None
+    max_v = None
+    for ind, v in enumerate(v):
+        x0 = np.real(v / np.sqrt(w[ind]) / 1.01 + c)
+        val = norm(A @ x0, ord=p)
+        if max_ is None or val > max_:
+            max_v = x0
+            max_ = val
+        res = scopt.minimize(opt, x0, 
+                             jac=grad_opt, method='SLSQP',
+                             constraints=constraints, options={"maxiter":100})
+        cur_x = res.x
+        val = np.linalg.norm(A@cur_x, ord=p)
+        if max_ is None  or (val > max_ and (constr(cur_x) - 1) <= 1e-6):
+            max_v = cur_x
+            max_ = val
+    return max_v
 
 
 def lowner(A, p, max_iter):
@@ -43,7 +89,6 @@ def lowner(A, p, max_iter):
             c = c - 1 / (d + 1) * b
             F = (d ** 2) / (d ** 2 - 1) * (F - 2 / (d + 1) * np.outer(b, b.T))
         ## 13 - 16
-        contained = True
         w, v = eig(inv(F.astype(np.float64)) * d ** 2)
         v = v.real.astype(np.float64)
         w = w.real.astype(np.float64)
@@ -53,28 +98,11 @@ def lowner(A, p, max_iter):
             stop = True
         if stop:
             break
-        for ind, val in enumerate(w):
-            v[ind] = v[ind] / sqrt(val)
-            # v[ind] = (v[ind]) + c
-        contained = True
-        for vec in v:
-            if norm(np.matmul(A, vec), p) > 1:
-                contained = False
-                break
-            # if norm(np.matmul(A, 2 * c - vec), p) > 1:
-            #     containd = False
-            #     break
-        if contained:
-            break
         ## 17
-        max_index = np.argmax(abs(w))
-        max_v = v[max_index]
-        _max = norm(np.matmul(A, max_v), p)
-        for i, eigh_v in enumerate(v):
-            if norm(np.matmul(A, eigh_v), p) > _max:
-                _max = norm(np.matmul(A, eigh_v), p)
-                max_v = v[i]
-        v = max_v
+        v = argmax_v(A, F, c, p)
+        print(norm(A@v, p))
+        if  norm(A @ v, p) <= 1:
+            break
         ##18..26
         grad = grad_compute(A, v, p)
         H = 1 / max(abs(grad)) * grad
