@@ -1,0 +1,120 @@
+\documentclass{beamer}
+\usepackage{amsmath,amsthm,amssymb}
+\usepackage{amsfonts}
+\usepackage{mathtext}
+\usepackage[T1,T2A]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english,russian]{babel} 
+\usepackage{mathtools}
+
+\usepackage{latexsym}
+\usepackage{import}
+\usepackage{xifthen}
+\usepackage{pdfpages}
+\usepackage{transparent}
+
+\newcommand{\incfig}[1]{%
+    \def\svgwidth{\columnwidth}
+    \import{./pictures/}{#1.pdf}
+}
+\pdfsuppresswarningpagegroup=1
+
+\title{Compressed Deep Networks: Robust Low-Rank Approximation}
+\author{Поздняков Григорий, Мухаметьянов Булат, Исмаилов Аким, Гарбуз Виктор, Курузов Илья}
+
+\begin{document}% начало презентации
+
+\begin{frame}% первый слайд
+\titlepage
+\end{frame}
+
+\begin{frame}
+Для примера выполним приближение для матрицы 
+$\begin{pmatrix}
+  3 & 5\\
+  0 & 1
+ \end{pmatrix}
+$
+\end{frame}
+
+\begin{frame}
+Норма: 4.205048581
+    \begin{center}
+        \includegraphics[scale=0.4]{pictures/1.eps}
+        % 1.pdf: 0x0 px, 300dpi, 0.00x0.00 cm, bb=
+    \end{center}
+\end{frame}
+
+\begin{frame}
+Норма: 1.870191875
+    \begin{center}
+        \includegraphics[scale=0.4]{pictures/2.eps}
+        % 1.pdf: 0x0 px, 300dpi, 0.00x0.00 cm, bb=
+    \end{center}
+\end{frame}
+
+\begin{frame}
+Норма: 1.673897363
+    \begin{center}
+        \includegraphics[scale=0.4]{pictures/3.eps}
+        % 1.pdf: 0x0 px, 300dpi, 0.00x0.00 cm, bb=
+    \end{center}
+\end{frame}
+
+\begin{frame}
+Норма: 1.498205836
+    \begin{center}
+        \includegraphics[scale=0.4]{pictures/4.eps}
+        % 1.pdf: 0x0 px, 300dpi, 0.00x0.00 cm, bb=
+    \end{center}
+\end{frame}
+
+\begin{frame}
+Норма: 1.393561122
+    \begin{center}
+        \includegraphics[scale=0.4]{pictures/5.eps}
+        % 1.pdf: 0x0 px, 300dpi, 0.00x0.00 cm, bb=
+    \end{center}
+\end{frame}
+
+\begin{frame}
+Норма: 1.193351619
+    \begin{center}
+        \includegraphics[scale=0.4]{pictures/6.eps}
+        % 1.pdf: 0x0 px, 300dpi, 0.00x0.00 cm, bb=
+    \end{center}
+\end{frame}
+
+\begin{frame}
+Норма: 1.005507172
+    \begin{center}
+        \includegraphics[scale=0.4]{pictures/7.eps}
+        % 1.pdf: 0x0 px, 300dpi, 0.00x0.00 cm, bb=
+    \end{center}
+\end{frame}
+
+\begin{frame}
+Норма: 0.9316673493
+    \begin{center}
+        \includegraphics[scale=0.4]{pictures/8.eps}
+        % 1.pdf: 0x0 px, 300dpi, 0.00x0.00 cm, bb=
+    \end{center}
+\end{frame}
+
+\begin{frame}
+Норма: 0.8195480889
+    \begin{center}
+        \includegraphics[scale=0.4]{pictures/9.eps}
+        % 1.pdf: 0x0 px, 300dpi, 0.00x0.00 cm, bb=
+    \end{center}
+\end{frame}
+
+\begin{frame}
+Норма: 0.7980541166
+    \begin{center}
+        \includegraphics[scale=0.4]{pictures/10.eps}
+        % 1.pdf: 0x0 px, 300dpi, 0.00x0.00 cm, bb=
+    \end{center}
+\end{frame}
+
+\end{document} 
