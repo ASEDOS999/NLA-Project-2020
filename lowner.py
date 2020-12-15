@@ -13,7 +13,7 @@ if not sys.warnoptions:
 
 
 ## The gradient of l_p-regression at c
-def grad_compute(A, x, p):
+def grad_compute_lp(A, x, p):
     A_ = torch.tensor(A, requires_grad=False).to(torch.device("cpu"))
     x_ = torch.tensor(x.astype(np.float64), requires_grad=True).to(torch.device("cpu"))
     y_ = torch.matmul(A_, x_).to(torch.device("cpu"))
@@ -21,9 +21,21 @@ def grad_compute(A, x, p):
     y_.backward()
     return x_.grad.detach().numpy()
 
+def grad_compute(A, c, p):
+    n, d = A.shape
+    grad = np.zeros((d,))
+    factors = np.zeros((n,))
+    for i in range(n): # то что в элементах градиента в знаменателях
+        factors[i] = np.abs(np.dot(A[i, :], c))
+    for j in range(d): # заполняем вектор который в выражении градиента
+        grad[j] = np.sum(A[:, j] / factors) * c[j]
+    #grad *= norm(np.matmul(A, c), p) ** (p-1) * norm(np.matmul(A, c), p-1) ** (p-1) # бесполезно, оно сокращаяется потом
+    return grad
+
+
 def argmax_v(A, F, c, p):
     opt = lambda x: -np.linalg.norm(A @ x, ord=p)
-    grad_opt = lambda x: grad_compute(A, x, p)
+    grad_opt = lambda x: grad_compute_lp(A, x, p)
     d = A.shape[1]
     F_inv = np.linalg.inv(F.astype(np.float64))
     constr = lambda x: d**2 * (x-c).T @ F_inv @ (x-c)
@@ -46,7 +58,7 @@ def argmax_v(A, F, c, p):
             max_ = val
         res = scopt.minimize(opt, x0, 
                              jac=grad_opt, method='SLSQP',
-                             constraints=constraints)
+                             constraints=constraints, options={"maxiter":100})
         cur_x = res.x
         val = np.linalg.norm(A@cur_x, ord=p)
         if max_ is None  or (val > max_ and (constr(cur_x) - 1) <= 1e-6):
